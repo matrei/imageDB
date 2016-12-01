@@ -10,8 +10,6 @@ class ImageAsset {
 
     Author author
 
-    Set<Tag> tags
-    Set<Metadata> metadata
     String filename
 
     String heading
@@ -23,7 +21,7 @@ class ImageAsset {
     BigDecimal latitude
     BigDecimal longitude
 
-    Long filesize = 0
+    Long fileSize = 0
     Integer pixelWidth = 0
     Integer pixelHeight = 0
 
@@ -32,6 +30,10 @@ class ImageAsset {
 
     Boolean enabled = true
     Date dateCreated
+
+    //Set<Tag> tags
+
+    //static hasMany = [ tags:Tag ]
 
     static constraints = {
         filename blank: false
@@ -50,5 +52,40 @@ class ImageAsset {
 
     static mapping = {
         description type: 'text'
+    }
+
+    //static transients = [ 'tags' ] //, 'metadata']
+
+    static searchable = {
+        // Elastic searchTest cannot index timezone objects
+        only = [
+                'filename',
+                'heading',
+                'description',
+           //     'tags',
+          //      'metadata'
+        ]
+        //metadata component: true
+        //tags component: true
+    }
+
+    Set<Tag> getTags() {
+        ImageAsset_Tag.findAllByImage(this)
+            .collect { it.tag } as Set
+    }
+
+    /*
+    void setTags(Set<Tag> tags) {
+        throw new Exception("setTags was called")
+    }
+    */
+
+    Set<Metadata> getMetadata() {
+        Metadata.findAllByImage(this) as Set
+    }
+
+    Set<ImageCollection> getImageCollections() {
+        ImageAsset_ImageCollection.findAllByImage(this)
+            .collect { it.imageCollection } as Set
     }
 }

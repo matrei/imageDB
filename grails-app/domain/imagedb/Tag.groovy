@@ -10,7 +10,6 @@ class Tag {
     }
 
     static searchable = {
-        root false
         only = ['name']
     }
 
@@ -18,7 +17,15 @@ class Tag {
         table 'tags'
     }
 
-    Set<ImageAsset> getImages() {
-        ImageAsset
+    void setName(String name) { this.name = name.toLowerCase() }
+
+    List<ImageAsset> getImages() {
+        Tag _this = this;
+        if(!this.locale) {
+            // Tag instance from ElasticSearch
+            _this = load(this.id)
+        }
+        ImageAsset_Tag.findAllByTag(_this)
+            .collect { it.image }
     }
 }
