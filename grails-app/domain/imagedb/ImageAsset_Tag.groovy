@@ -6,6 +6,7 @@ class ImageAsset_Tag implements Serializable {
 
     ImageAsset image
     Tag tag
+    Boolean manuallyAdded
 
     static mapping = {
         id composite: ['tag', 'image']
@@ -15,24 +16,28 @@ class ImageAsset_Tag implements Serializable {
     static constraints = {
     }
 
-    static ImageAsset_Tag create(ImageAsset i, Tag t, boolean flush = false) {
-        new ImageAsset_Tag(imageAsset: i, tag: t)
-            .save(flush: flush, insert: true)
+    static ImageAsset_Tag create(ImageAsset image, Tag tag, boolean manuallyAdded, boolean flush = false) {
+        new ImageAsset_Tag(imageAsset: image, tag: tag, manuallyAdded: manuallyAdded)
+                .save(flush: flush, insert: true)
     }
 
     static boolean remove(ImageAsset i, Tag t) {
         where {
             image == ImageAsset.load(i.id) &&
-            tag   == Tag       .load(t.id)
+            tag == Tag.load(t.id)
         }.deleteAll()
     }
 
     static boolean removeAll(ImageAsset i) {
-        where { image == ImageAsset.load(i.id) }.deleteAll()
+        where {
+            image == ImageAsset.load(i.id)
+        }.deleteAll()
     }
 
     static boolean removeAll(Tag t) {
-        where { tag == Tag.load(t.id) }.deleteAll()
+        where {
+            tag == Tag.load(t.id)
+        }.deleteAll()
     }
 
     boolean equals(other) {
@@ -47,5 +52,4 @@ class ImageAsset_Tag implements Serializable {
         if(tag)   builder.append(tag.id)
         builder.toHashCode()
     }
-
 }

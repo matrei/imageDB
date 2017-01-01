@@ -25,18 +25,94 @@ class BootStrap {
             assets << asset
         }
 
-        Tag tag_noll = Tag.findOrCreateByLocaleAndName('sv_SE', 'noll').save(failOnError: true)
-        Tag tag_ett = Tag.findOrCreateByLocaleAndName('sv_SE', 'ett').save(failOnError: true)
-        Tag tag_tva = Tag.findOrCreateByLocaleAndName('sv_SE', 'två').save(failOnError: true)
-        Tag tag_siffra = Tag.findOrCreateByLocaleAndName('sv_SE', 'siffra').save(failOnError: true)
+        Tag tag_noll = Tag.findOrCreateByLocaleAndName('sv', 'noll').save(failOnError: true)
+        Tag tag_zero = Tag.findOrCreateByLocaleAndName('en', 'zero').save(failOnError: true)
+        Tag tag_nil = Tag.findOrCreateByLocaleAndName('en', 'nil').save(failOnError: true)
+        addTranslation(tag_noll, tag_zero, tag_nil)
+        addSynonym(tag_nil, tag_zero)
 
-        new ImageAsset_Tag(image: assets[0], tag: tag_noll).save(failOnError: true)
-        new ImageAsset_Tag(image: assets[1], tag: tag_ett).save(failOnError: true)
-        new ImageAsset_Tag(image: assets[2], tag: tag_tva).save(failOnError: true)
-        new ImageAsset_Tag(image: assets[3], tag: tag_tva).save(failOnError: true)
+        Tag tag_ett = Tag.findOrCreateByLocaleAndName('sv', 'ett').save(failOnError: true)
+        Tag tag_one = Tag.findOrCreateByLocaleAndName('en', 'one').save(failOnError: true)
+        addTranslation(tag_ett, tag_one)
+
+        Tag tag_tva = Tag.findOrCreateByLocaleAndName('sv', 'två').save(failOnError: true)
+        Tag tag_two = Tag.findOrCreateByLocaleAndName('en', 'two').save(failOnError: true)
+        addTranslation(tag_tva, tag_two)
+
+        Tag tag_siffra = Tag.findOrCreateByLocaleAndName('sv', 'siffra').save(failOnError: true)
+        Tag tag_digit = Tag.findOrCreateByLocaleAndName('en', 'digit').save(failOnError: true)
+        Tag tag_figure = Tag.findOrCreateByLocaleAndName('en', 'figure').save(failOnError: true)
+        addTranslation(tag_siffra, tag_digit)
+        addSynonym(tag_digit, tag_figure)
+
+        addTagToImage(assets[0], tag_noll)
+        addTagToImage(assets[1], tag_ett)
+        addTagToImage(assets[2], tag_tva)
 
         3.times {
-            new ImageAsset_Tag(image: assets[it], tag: tag_siffra).save(failOnError: true)
+            addTagToImage(assets[it], tag_siffra)
+        }
+    }
+
+    private static void addTagToImage(image, tag) {
+        new ImageAsset_Tag(image: image, tag: tag, manuallyAdded: true).save(failOnError: true)
+        getRelatedTags(tag).each {
+            new ImageAsset_Tag(image: image, tag: it, manuallyAdded: false).save(failOnError: true)
+        }
+    }
+
+    private static Set<Tag> getRelatedTags(Tag tag) {
+        def relatedTags = getAllTags(tag)
+        relatedTags.remove(tag)
+        relatedTags
+    }
+
+    private static Set<Tag> getAllTags(Tag tag, Set<Tag> tags = []) {
+        if(!tags.contains(tag)) {
+            tags << tag
+        }
+        tag.translations.each {
+            if(!tags.contains(it)) {
+                Set<Tag> relatedTags = getAllTags(it, tags)
+                relatedTags.each {
+                    if(!tags.contains(it)) {
+                        tags << it
+                    }
+                }
+            }
+        }
+        tag.synonyms.each {
+            if(!tags.contains(it)) {
+                Set<Tag> relatedTags = getAllTags(it, tags)
+                relatedTags.each {
+                    if(!tags.contains(it)) {
+                        tags << it
+                    }
+                }
+            }
+        }
+        tags
+    }
+
+    private static void addTranslation(Tag... tags) {
+        for(int i = 0; i < tags.length; i++) {
+            for(int j = 0; j < tags.length; j++) {
+                if(!tags[i].is(tags[j])) {
+                    tags[i].addToTranslations(tags[j])
+                    tags[i].save(failOnError: true)
+                }
+            }
+        }
+    }
+
+    private static void addSynonym(Tag... tags) {
+        for(int i = 0; i < tags.length; i++) {
+            for(int j = 0; j < tags.length; j++) {
+                if(!tags[i].is(tags[j])) {
+                    tags[i].addToSynonyms(tags[j])
+                    tags[i].save(failOnError: true)
+                }
+            }
         }
     }
 }

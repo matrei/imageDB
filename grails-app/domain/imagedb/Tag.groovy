@@ -5,6 +5,16 @@ class Tag {
     String locale
     String name
 
+    static hasMany = [
+        synonyms: Tag,
+        translations: Tag
+    ]
+
+    static mappedBy = [
+        synonyms: 'synonyms',
+        translations: 'translations'
+    ]
+
     static constraints = {
         name unique: 'locale'
     }
